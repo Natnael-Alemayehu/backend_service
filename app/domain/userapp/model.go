@@ -73,6 +73,9 @@ func (app *NewUser) Decode(data []byte) error {
 
 // Validate checks the data in the model is considered clean.
 func (app NewUser) Validate() error {
+	if app.Roles == nil {
+		app.Roles = []string{"USER"}
+	}
 	if err := errs.Check(app); err != nil {
 		return fmt.Errorf("validate: %w", err)
 	}

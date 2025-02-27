@@ -150,3 +150,28 @@ func (a *app) queryByID(ctx context.Context, _ *http.Request) web.Encoder {
 
 	return toAppUser(usr)
 }
+
+func (a *app) register(ctx context.Context, r *http.Request) web.Encoder {
+	var appReg NewUser
+	if err := web.Decode(r, &appReg); err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	// Set default role to User
+	appReg.Roles = []string{"USER"}
+
+	nc, err := toBusNewUser(appReg)
+	if err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	usr, err := a.userBus.Create(ctx, nc)
+	if err != nil {
+		if errors.Is(err, userbus.ErrUniqueEmail) {
+			return errs.New(errs.Aborted, userbus.ErrUniqueEmail)
+		}
+		return errs.Newf(errs.Internal, "create: usr[%+v]: %s", usr, err)
+	}
+
+	return toAppUser(usr)
+}
